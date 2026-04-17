@@ -1,0 +1,19 @@
+server:
+  port: 8761
+
+spring:
+  application:
+    name: eureka-server
+  # Conexión local al config-server
+  config:
+    import: "optional:configserver:http://localhost:8888"
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    # Deshabilitar cliente/registro para modo standalone
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
