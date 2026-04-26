@@ -46,6 +46,50 @@ services:
       - ntt_network
 
   # ==========================================
+  # 2.1 Auth Service
+  # ==========================================
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: ntt_auth_service
+    restart: unless-stopped
+    ports:
+      - "8088:8088"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    networks:
+      - ntt_network
+
+  # ==========================================
+  # 2.2 Account Service
+  # ==========================================
+  account-service:
+    build:
+      context: ../account-service
+      dockerfile: Dockerfile
+    container_name: ntt_account_service
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/ntt_account
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      ACCOUNT_CLIENTS_TIMEOUT: 2s
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - ntt_network
+
+  # ==========================================
   # 3. Apache Kafka Ecosystem
   # ==========================================
   # 3.1 Zookeeper

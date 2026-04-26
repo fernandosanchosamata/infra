@@ -1,0 +1,36 @@
+server:
+  port: 8088
+
+spring:
+  application:
+    name: auth-service
+  config:
+    import: "optional:configserver:http://localhost:8888"
+  cloud:
+    config:
+      enabled: false
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+jwt:
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  expiration-minutes: 60
+
+auth:
+  users:
+    - username: admin
+      password: admin123
+      subject: admin
+      roles:
+        - ADMIN
+    - username: customer
+      password: customer123
+      subject: customer
+      customer-id: 69e984c3ea77252c2fd48d7c
+      roles:
+        - CUSTOMER
