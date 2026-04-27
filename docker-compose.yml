@@ -1,6 +1,66 @@
-version: '3.8'
-
 services:
+  # ==========================================
+  # 0. Config Server
+  # ==========================================
+  config-server:
+    build:
+      context: ./config-server
+      dockerfile: Dockerfile
+    container_name: ntt_config_server
+    restart: unless-stopped
+    ports:
+      - "8888:8888"
+    environment:
+      SPRING_PROFILES_ACTIVE: native
+      SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS: file:/config-repo
+    volumes:
+      - ./config-repo:/config-repo:ro
+    networks:
+      - ntt_network
+
+  # ==========================================
+  # 0.1 Eureka Server
+  # ==========================================
+  eureka-server:
+    build:
+      context: ./eureka-server
+      dockerfile: Dockerfile
+    container_name: ntt_eureka_server
+    restart: unless-stopped
+    ports:
+      - "8761:8761"
+    environment:
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      EUREKA_INSTANCE_HOSTNAME: eureka-server
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "false"
+      EUREKA_CLIENT_FETCH_REGISTRY: "false"
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    depends_on:
+      - config-server
+    networks:
+      - ntt_network
+
+  # ==========================================
+  # 0.2 API Gateway
+  # ==========================================
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: ntt_api_gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    depends_on:
+      - config-server
+      - eureka-server
+    networks:
+      - ntt_network
+
   # ==========================================
   # 1. MongoDB Database
   # ==========================================
@@ -61,31 +121,9 @@ services:
       SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
       JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
-    networks:
-      - ntt_network
-
-  # ==========================================
-  # 2.2 Account Service
-  # ==========================================
-  account-service:
-    build:
-      context: ../account-service
-      dockerfile: Dockerfile
-    container_name: ntt_account_service
-    restart: unless-stopped
-    ports:
-      - "8083:8083"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
-      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/ntt_account
-      SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: 6379
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-      ACCOUNT_CLIENTS_TIMEOUT: 2s
     depends_on:
-      - mongodb
-      - redis
+      - config-server
+      - eureka-server
     networks:
       - ntt_network
 
