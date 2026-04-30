@@ -14,7 +14,10 @@ services:
       SPRING_PROFILES_ACTIVE: native
       SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS: file:/config-repo
     volumes:
-      - ./config-repo:/config-repo:ro
+      - type: bind
+        source: ./config-repo
+        target: /config-repo
+        read_only: true
     networks:
       - ntt_network
 
