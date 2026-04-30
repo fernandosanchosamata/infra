@@ -1,8 +1,27 @@
+server:
+  port: 8083
+
 spring:
   data:
+    mongodb:
+      uri: mongodb://localhost:27017/ntt_account
+      auto-index-creation: true
     redis:
       host: localhost
       port: 6379
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      creditService:
+        slidingWindowSize: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+  timelimiter:
+    instances:
+      creditService:
+        timeoutDuration: 2s
 
 account:
   clients:
